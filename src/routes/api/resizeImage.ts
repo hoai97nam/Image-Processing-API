@@ -1,28 +1,35 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import sharp from 'sharp';
 import path from 'path';
+import promises from 'fs';
 
 const resizeImage = express.Router();
 
-resizeImage.post('/', async (req, res) => {
-  const imagePath = path.join(
-    __dirname,
-    `../../../${req.query.name ? req.query.name : 'camel'}.png`
-  );
-
-  if (req.query.hasOwnProperty('width') && req.query.hasOwnProperty('height')) {
-    const outputImage = path.join(
+resizeImage.get('/', async (req, res) => {
+  if (
+    req.query.hasOwnProperty('filename') &&
+    req.query.hasOwnProperty('width') &&
+    req.query.hasOwnProperty('height')
+  ) {
+    const originalImage = path.join(__dirname, `../../../camel.png`);
+    const imagePath = path.join(
       __dirname,
-      `../../../changes/${req.query.name}-${req.query.width}x${req.query.height}-resized.png`
+      `../../../changes/${req.query.filename}-${req.query.width}-${req.query.height}.png`
     );
 
-    const width = Number(req.query.width);
-    const height = Number(req.query.height);
-
-    await resizeImageFunc(imagePath, outputImage, width, height);
-    res.status(200).sendFile(outputImage);
+    try {
+      await promises.accessSync(imagePath, promises.constants.F_OK);
+      console.log('File exists');
+      res.status(200).sendFile(imagePath);
+    } catch (err) {
+      console.log('File does not exist');
+      const width = Number(req.query.width);
+      const height = Number(req.query.height);
+      await resizeImageFunc(originalImage, imagePath, width, height);
+      res.status(200).sendFile(imagePath);
+    }
   } else {
-    res.status(200).sendFile(imagePath);
+    res.status(400);
   }
 });
 
