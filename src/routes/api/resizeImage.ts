@@ -5,7 +5,7 @@ import promises from 'fs';
 
 const resizeImage = express.Router();
 
-resizeImage.get('/', async (req, res) => {
+resizeImage.get('/', async (req: Request, res: Response) => {
   if (
     req.query.hasOwnProperty('filename') &&
     req.query.hasOwnProperty('width') &&
@@ -20,16 +20,16 @@ resizeImage.get('/', async (req, res) => {
     try {
       await promises.accessSync(imagePath, promises.constants.F_OK);
       console.log('File exists');
-      res.status(200).sendFile(imagePath);
+      return res.status(200).sendFile(imagePath);
     } catch (err) {
       console.log('File does not exist');
       const width = Number(req.query.width);
       const height = Number(req.query.height);
       await resizeImageFunc(originalImage, imagePath, width, height);
-      res.status(200).sendFile(imagePath);
+      return res.status(200).sendFile(imagePath);
     }
   } else {
-    res.status(400);
+    return res.status(400);
   }
 });
 
